@@ -1,0 +1,59 @@
+---
+- name: Login to sonatype registries
+  shell: |
+    podman login -u {{ esgadmin_sonatypeprod }} -p {{ esgadmin_sonatypeprod_token }} sonatypenxpr01.smbcgroup.com:18443
+  tags: always
+
+- name: Login to quay.io/sysdig
+  shell: !
+    podman login quay.io -u sysdig+smbc_via_ibm -p {{ sysdig_pull_secret }}
+  tags: always
+
+- name: set dest vars
+  set_fact:
+    dest_reg: sonatypenxpr01.smbcgroup.com:18443/repository/sysdig
+  tags: always
+
+- name: Push images to sonatype esg registry for sysdig installation
+  shell: |
+    skopeo copy --dest-creds {{ esgadmin_sonatypeprod }}:{{ esgadmin_sonatypeprod_token }} --src-creds sysdig+smbc_via_ibm:{{ sysdig_pull_secret }} \
+    docker://quay.io/sysdig/{{ item }} \
+    docker://{{ dest_reg}}/{{ item }}
+  tags: always
+  loop:
+    - elasticsearch:6.8.6.5
+    - mysql:5.6.44.2
+    - nats-streaming:0.17.0.1
+    - nats-exporter:0.6.2.1
+    - redis:4.0.12.9
+    - postgres:12.4.0.0
+    - onprem_migration:0.0.1-nats-tls-ha-migration-0.17.0.1
+    - sysdigcloud-backend:3.6.0.7691-email-renderer
+    - sysdigcloud-backend:3.6.0.7691-allinone-java
+    - sysdigcloud-backend:3.6.0.7691-nginx
+    - ingress-default-backend:1.5
+    - haproxy-ingress:0.10.0.0
+    - scanning-retention-mgr:3.6.0.7691
+    - scanning:3.6.0.7691
+    - scanning-ve-janitor:3.6.0.7691
+    - compliance-api:3.6.0.7691
+    - anchore:0.8.1.2
+    - events-forwarder:3.6.0.7691
+    - events-forwarder-api:3.6.0.7691
+    - events-gatherer:3.6.0.7691
+    - events-api:3.6.0.7691
+    - events-dispatcher:3.6.0.7691
+    - events-janitor:3.6.0.7691
+    - profiling-api:3.6.0.7691
+    - profiling-worker:3.6.0.7691
+    - activity-audit-api:3.6.0.7691
+    - activity-audit-worker:3.6.0.7691
+    - activity-audit-janitor:3.6.0.7691
+    - overview-api:3.6.0.7691
+    - secure-prometheus:2.17.2
+    - overview-api:3.6.0.7691
+    - padvisor:3.6.0.7691
+    - rsyslog:8.2004.0.0
+    - cassandra:2.1.22.0
+
+

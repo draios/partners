@@ -1,0 +1,97 @@
+schema_version: 1.0.0
+size: medium
+deployment: openshift
+apps: monitor secure
+
+airgapped_registry_name: "{{ sonatype_registry_name }}"
+airgapped_registry_password: "{{ sonatype_token_password }}"
+airgapped_registry_username: "{{ sonatype_user_token }}"
+
+namespace: sysdigcloud
+nodeaffinityLabel:
+  key: node-role
+  value: sysdig
+
+quaypullsecret: ewogICJhdXRocyI6IHsKICAgICJxdWF5LmlvIjogewogICAgICAiYXV0aCI6ICJjM2x6WkdsbkszTnRZbU5mZG1saFgybGliVG8zTlZoRk0wRlBWRXhZUWpSUlRVMUhNVEpTT0RkUU1rNDRNMUpVUjFwQ1ZrWlFSMU5FV1ZGVVdVTk1SVVJGVFZBMlRUSkNUVE5SVjFoQ1Z6bFZXRE5OIiwKICAgICAgImVtYWlsIjogIiIKICAgIH0KICB9Cn0=
+
+#storageClassName: vsan-r6-ftt2-iops0-sc
+storageClassName: px-rwo-repl3-sc
+
+
+elasticsearch:
+  jvmOptions: -Xms4G -Xmx4G
+  searchguard:
+    enabled: false
+
+sysdig:
+  license: "{{ sysdig_license }}"
+  dnsName: sysdig-sysdigcloud.apps.{{ cluster_name }}.smbcgroup.com
+  admin:
+    username: smbcesg@smbcgroup.com
+  smtpServer: intsmtp.smbcgroup.com
+  smtpServerPort: 25
+  smtpFromAddress: sysdig@{{ cluster_name }}.smbcgroup.com
+  certificate:
+    generate: false
+    crt: cert/sysdig-sysdigcloud.apps.{{ cluster_name }}.smbcgroup.com.crt
+    key: cert/sysdig-sysdigcloud.apps.{{ cluster_name }}.smbcgroup.com.key
+  collector:
+    certificate:
+      generate: false
+      crt: cert/sysdig-collector-sysdigcloud.apps.{{ cluster_name }}.smbcgroup.com.crt
+      key: cert/sysdig-collector-sysdigcloud.apps.{{ cluster_name }}.smbcgroup.com.key
+    dnsName: sysdig-collector-sysdigcloud.apps.{{ cluster_name }}.smbcgroup.com
+    jvmOptions: -Xms4G -Xmx4G
+  worker:
+    jvmOptions: -Xms4G -Xmx4G
+  cassandra:
+    jvmOptions: -Xms4G -Xmx4G
+    secure: true
+    ssl: true
+  api:
+    jvmOptions:  -Xms4G -Xmx4G
+  apiReplicaCount: 3
+  collectorReplicaCount: 3
+  workerReplicaCount: 3
+  resources:
+    api:
+      limits:
+        cpu: 4
+        memory: 6Gi
+      requests:
+        cpu: 1
+        memory: 4Gi
+    collector:
+      limits:
+        cpu: 4
+        memory: 6Gi
+      requests:
+        cpu: 1
+        memory: 4Gi
+    worker:
+      limits:
+        cpu: 4
+        memory: 6Gi
+      requests:
+        cpu: 1
+        memory: 4Gi
+    cassandra:
+      limits:
+        cpu: 6
+        memory: 8Gi
+      requests:
+        cpu: 1
+        memory: 4Gi
+    elasticsearch:
+      limits:
+        cpu: 4
+        memory: 6Gi
+      requests:
+        cpu: 1
+        memory: 4Gi
+pvStorageSize:
+  medium:
+    cassandra: 300Gi
+    elasticsearch: 150Gi
+    mysql: 60Gi
+    postgresql: 60Gi

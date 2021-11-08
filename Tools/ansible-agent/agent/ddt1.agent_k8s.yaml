@@ -1,0 +1,94 @@
+---
+- hosts:  targets
+  gather_facts: false
+  #connection: local
+
+  collections:
+    - community.kubernetes
+  tasks:
+  - name: Create sysdig-agent namespace
+    k8s:
+      name: sysdig-agent
+      kind: Namespace
+  - name: Create sysdig-agent secret
+    k8s:
+      namespace: sysdig-agent
+      name: sysdig-agent
+      kind: Secret
+      definition:
+        type: Opaque
+        stringData:
+          access-key: "{{ access_key }}"
+  - name: Create sysdig-agent clusterrole
+    k8s:
+      namespace: sysdig-agent
+      definition: >-
+        {{
+          lookup('url', 'https://raw.githubusercontent.com/draios/sysdig-cloud-scripts/master/agent_deploy/kubernetes/sysdig-agent-clusterrole.yaml', split_lines=False)
+          | from_yaml
+        }}
+  - name: Create sysdig-agent service account
+    k8s:
+      name: sysdig-agent
+      kind: ServiceAccount
+      namespace: sysdig-agent
+  - name: Create clusterrole binding
+    k8s:
+      name: sysdig-agent
+      kind: ClusterRoleBinding
+      namespace: sysdig-agent
+      definition:
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: sysdig-agent
+        subjects:
+          - kind: ServiceAccount
+            name: sysdig-agent
+            namespace: sysdig-agent
+  - name: Create sysdig-agent configmap
+    k8s:
+      namespace: sysdig-agent
+      name: sysdig-agent
+      kind: ConfigMap
+      definition:
+        data:
+          dragent.yaml: |
+            configmap: true
+            collector: "{{ collector_url }}"
+            collector_port: "{{ collector_port }}"
+            ssl: true
+            ssl_verify_certificate: false
+            new_k8s: true
+            k8s_cluster_name: "{{ k8s_cluster_name }}"
+            sysdig_capture_enabled: true
+            app_checks_always_send: true
+            app_checks_limit: 1500
+            statsd:
+              use_forwarder: true
+            security:
+              enabled: true
+              k8s_audit_server_url: 0.0.0.0
+              k8s_audit_server_port: 7765
+  - name: Create sysdig-agent service
+    k8s:
+      namespace: sysdig-agent
+      definition: >-
+        {{
+          lookup('url', 'https://raw.githubusercontent.com/draios/sysdig-cloud-scripts/master/agent_deploy/kubernetes/sysdig-agent-service.yaml', split_lines=False)
+          | from_yaml
+        }}
+  - name: Create sysdig-agent daemonset
+    k8s:
+      namespace: sysdig-agent
+      definition: >-
+        {{
+          lookup('url', 'https://raw.githubusercontent.com/draios/sysdig-cloud-scripts/master/agent_deploy/kubernetes/sysdig-agent-daemonset-v2.yaml', split_lines=False)
+          | regex_replace('image: quay.io/sysdig/agent', 'image: sysdig/agent:latest')
+          | from_yaml
+        }}
+    register: agentds
+  - name: Wait for the agent to start
+    pause:
+      seconds: 60
+    when: agentds.changed

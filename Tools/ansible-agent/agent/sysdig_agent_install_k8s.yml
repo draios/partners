@@ -1,0 +1,14 @@
+---
+- name: Manage Sysdig Installation
+  hosts: localhost
+  become: false
+  gather_facts: false
+
+  tasks:
+    - name: Install Sysdig Agent
+      include_role:
+        name: role-sysdig
+        tasks_from: agent-install.yml
+      tags:
+        - never
+        - k8s-install

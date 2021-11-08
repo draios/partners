@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+  tasks:
+     - name: Gather information about nginx-server
+       kubernetes.core.helm_info:
+         name: nginx-server
+         release_namespace: testing

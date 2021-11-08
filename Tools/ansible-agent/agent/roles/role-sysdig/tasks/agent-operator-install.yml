@@ -1,0 +1,18 @@
+---
+- name: Install Sysdig Agent Operator
+  include_role:
+    name: ocp-deploy-operator
+  vars:
+    op_namespace: "sysdig-agent"
+    pck_name: "sysdig-certified"
+    pck_channelName: "stable"
+    pck_namespace: "certified-operators" # where to pull operator from
+    op_ns_annotations:
+      openshift.io/node-selector: ''
+    operatorgroup:
+      spec:
+        targetNamespaces:
+          - sysdig-agent
+    additional_resource_templates:
+      - "{{ playbook_dir }}/roles/role-sysdig/templates/crd_sysdig_agent.yml.j2"
+  tags: always

@@ -1,0 +1,16 @@
+- name: Create tuned profile for sysdig
+  delegate_to: localhost
+  k8s:
+    kind: Tuned
+    name: sysdig
+    state: "{{ operator.state | default('present') }}"
+    resource_definition: "{{ lookup('template', 'templates/sysdig-tuned.j2')}}"
+    kubeconfig: "{{ kube_config_path }}"
+  tags: always
+
+- name: Label worker nodes with app=sysdig-agent
+  shell: "oc label node {{ item }}  node-role=sysdig --overwrite=true"
+  changed_when: false
+  loop: "{{ query('inventory_hostnames', 'worker') }}"
+  tags: always
+
