@@ -1,0 +1,24 @@
+#Sysdig docker agent install
+- name: Run apt-get update as a separate step
+  apt:
+    update_cache: yes
+
+- name: Install agent as docker container
+  shell: |
+    docker run -d --name sysdig-agent \
+          --restart always \
+          --privileged \
+          --net host \
+          --pid host \
+          -e ACCESS_KEY={{ sysdig_access_key }} \
+          -e COLLECTOR={{ sysdig_collector }} \
+          -e SECURE=true \
+          -e CHECK_CERTIFICATE=false \
+          -v /var/run/docker.sock:/host/var/run/docker.sock \
+          -v /dev:/host/dev \
+          -v /proc:/host/proc:ro \
+          -v /boot:/host/boot:ro \
+          -v /lib/modules:/host/lib/modules:ro \
+          -v /usr:/host/usr:ro --shm-size=512m sysdig/agent
+  changed_when: false
+  tags: always

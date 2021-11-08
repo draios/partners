@@ -1,0 +1,44 @@
+---
+- name: Manage Sysdig Installation on K8S
+  hosts: localhost
+  become: true
+  gather_facts: false
+  environment:
+    KUBRCONFIG: /home/ansible/.kube/config
+
+  tasks:
+    - name: Install Sysdig Agent
+      include_role:
+        name: role-sysdig
+        tasks_from: agent-install-k8s.yml
+      tags:
+        - never
+        - k8s-install
+
+- name: Manage Sysdig Installation Systemd
+  hosts: SYSTEMD
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Install Sysdig Agent Systemd
+      include_role:
+        name: role-sysdig
+        tasks_from: agent-install-systemd.yml
+      tags:
+        - never
+        - systemd-install
+
+- name: Manage Sysdig Installation Docker
+  hosts: DOCKER
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Install Sysdig Agent Docker
+      include_role:
+        name: role-sysdig
+        tasks_from: agent-install-docker.yml
+      tags:
+        - never
+        - docker-install

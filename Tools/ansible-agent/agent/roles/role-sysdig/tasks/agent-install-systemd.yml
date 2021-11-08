@@ -1,0 +1,14 @@
+#Sysdig systemd agent install
+- name: Run apt-get update as a separate step
+  apt:
+    update_cache: yes
+
+- name: Install agent as systemd daemon
+  shell: |
+    curl -s https://download.sysdig.com/stable/install-agent | sudo bash -s -- \
+      --access_key {{ sysdig_access_key }} \
+      --collector {{ sysdig_collector }} \
+      --secure true \
+      --check_certificate false
+  changed_when: false
+  tags: always

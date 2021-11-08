@@ -1,0 +1,42 @@
+apiVersion: sysdig.com/v1
+kind: SysdigAgent
+metadata:
+  name: sysdig-agent
+  namespace: sysdig-agent
+spec:
+  daemonset:
+    annotations:
+      productID: SysdigSecureDevopsPlatform
+      productName: Sysdig Secure DevOps Platform
+      productVersion: 1.8.3
+  scc:
+    create: true
+  sysdig:
+    accessKey: "{{ sysdig_access_key }}"
+    settings:
+      prometheus:
+        enabled: true
+        interval: 10
+        process_filter:
+          - include:
+              process.cmdline: "px"
+              conf:
+                port: 9001
+                path: "/metrics"
+  rbac:
+    create: true
+  serviceAccount:
+    create: true
+    name: sysdig-agent
+  onPrem:
+    enabled: true
+    collectorHost: "{{ sysdig_collector }}"
+    collectorPort: "{{ sysdig_collector_port }}"
+    ssl: true
+    sslVerifyCertificate: false
+  clusterName: "{{ cluster_name }}"
+  auditLog:
+    # true here activates the K8s Audit Log feature for Sysdig Secure
+    enabled: true
+    auditServerUrl: 0.0.0.0
+    auditServerPort: 7765

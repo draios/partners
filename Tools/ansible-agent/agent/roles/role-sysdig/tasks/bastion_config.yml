@@ -1,0 +1,43 @@
+---
+- name: Copy installer to /usr/bin
+  copy:
+    src: "{{ role_path}}/files/installer-linux-amd64"
+    dest: /usr/bin/installer-linux-amd64
+    owner: root
+    group: root
+    mode: '0555'
+  become: true
+  tags: always
+
+- name: create installation directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    group: '20027'
+    mode: '0775'
+  loop:
+    - /opt/ocp/sysdig
+    - /opt/ocp/sysdig/cert
+  tags: always
+
+- name: create values file in installation dir
+  template:
+    src: "{{ role_path}}/templates/values.yaml.j2"
+    dest: "/opt/ocp/sysdig/values.yaml"
+    mode: '0640'
+    group: '20027'
+    remote_src: true
+  tags: always
+
+- name: copy sysdig certs to installation dir
+  copy:
+    src: "{{ role_path}}/files/{{ item }}"
+    dest: "/opt/ocp/sysdig/{{ item }}"
+    mode: '0640'
+    group: '20027'
+  loop:
+    - "cert/sysdig-collector-sysdigcloud.apps.{{ cluster_name }}.smbcgroup.com.crt"
+    - "cert/sysdig-collector-sysdigcloud.apps.{{ cluster_name }}.smbcgroup.com.key"
+    - "cert/sysdig-sysdigcloud.apps.{{ cluster_name }}.smbcgroup.com.crt"
+    - "cert/sysdig-sysdigcloud.apps.{{ cluster_name }}.smbcgroup.com.key"
+  tags: always

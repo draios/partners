@@ -1,0 +1,6 @@
+---
+sysdig_collector: pae.dimondan.dev.draios.com
+sysdig_collector_port: 6443
+cluster_name: PAE
+agent_version: latest
+kube_config_path: /home/ansible/.kube/config

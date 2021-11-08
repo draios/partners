@@ -1,0 +1,92 @@
+#https://docs.sysdig.com/en/steps-for-openshift.html
+- name: Create sysdig-agent namespace
+  delegate_to: localhost
+  k8s:
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: sysdig-agent
+        annotations:
+          openshift.io/node-selector: 'app=sysdig-agent'
+    state: "{{ operator.state | default('present') }}"
+#    kubeconfig: "{{ kube_config_path }}"
+  tags: always
+
+- name: Label all nodes with app=sysdig-agent
+  shell: "kubectl label node --all app=sysdig-agent --overwrite=true"
+  changed_when: false
+  tags: always
+
+- name: Create Service Account for sysdig agent
+  delegate_to: localhost
+  k8s:
+    kind: ServiceAccount
+    name: sysdig-agent
+    namespace: sysdig-agent
+    state: "{{ operator.state | default('present') }}"
+#    kubeconfig: "{{ kube_config_path }}"
+  tags: always
+
+- name: Create role binding for privileged scc for sysdig-agent account
+  delegate_to: localhost
+  k8s:
+    kind: RoleBinding
+    name:  system:openshift:scc:privileged
+    resource_definition: "{{ lookup('template', 'templates/sysdig-agent-privileged-rolebinding.j2')}}"
+    state: "{{ operator.state | default('present') }}"
+#    kubeconfig: "{{ kube_config_path }}"
+    namespace: sysdig-agent
+  tags: always
+
+- name: Create cluster role binding for cluster-reader for sysdig-agent account
+  delegate_to: localhost
+  k8s:
+    kind: ClusterRoleBinding
+    name:  cluster-reader
+    resource_definition: "{{ lookup('template', 'templates/cluster-reader-sysdig-agent-clusterrolebinding.j2')}}"
+    state: "{{ operator.state | default('present') }}"
+#    kubeconfig: "{{ kube_config_path }}"
+    namespace: sysdig-agent
+  tags: always
+
+- name: Create secret for sysdig-agent
+  delegate_to: localhost
+  k8s:
+    kind: Secret
+    name: sysdig-agent
+    resource_definition: "{{ lookup('template', 'templates/sysdig-agent-secret.j2')}}"
+    state: "{{ operator.state | default('present') }}"
+#    kubeconfig: "{{ kube_config_path }}"
+    namespace: sysdig-agent
+  tags: always
+
+#- name: Configure External Registry for Sysdig Agent Image Pull
+#  include_role:
+#    name: role-external-registry-config
+#  vars:
+#    registry_user_name: "{{ registry_user_name }}"
+#    registry_name: "{{ registry_name }}"
+#    registry_user_token: "{{ registry_user_token }}"
+#    registry_token_password: "{{ registry_token_password }}"
+#    registry_namespace: "{{ item.namespace }}"
+#    service_account: "{{ item.sa }}"
+#  loop:
+#    - namespace: sysdig-agent
+#      sa: sysdig-agent
+#  tags: always
+
+# Edit sysdig-agent-configmap.yaml to add the collector address, port, and the SSL/TLS information
+
+- name: Configure agent config map, service, and daemonset
+  delegate_to: localhost
+  k8s:
+    resource_definition: "{{ lookup('template', 'templates/{{ item }}.j2')}}"
+    state: "{{ operator.state | default('present') }}"
+#    kubeconfig: "{{ kube_config_path }}"
+    namespace: sysdig-agent
+  loop:
+    - sysdig-agent-configmap
+    - sysdig-agent-service
+    - sysdig-agent-daemonset-v2
+  tags: always

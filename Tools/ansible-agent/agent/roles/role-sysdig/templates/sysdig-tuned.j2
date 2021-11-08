@@ -1,0 +1,20 @@
+#https://docs.openshift.com/container-platform/4.5/scalability_and_performance/using-node-tuning-operator.html
+apiVersion: tuned.openshift.io/v1
+kind: Tuned
+metadata:
+  name: sysdig
+  namespace: openshift-cluster-node-tuning-operator
+spec:
+  profile:
+  - data: |
+      [main]
+      summary=A custom OpenShift profile for sysdig
+      include=openshift-node
+      [sysctl]
+      vm.max_map_count=262144
+    name: openshift-sysdig
+  recommend:
+  - match:
+    - label: node-role.kubernetes.io/worker
+    priority: 10
+    profile: openshift-sysdig

@@ -1,0 +1,20 @@
+#https://docs.sysdig.com/en/steps-for-openshift.html
+
+- name: Copy linux_agent_install.sh to /usr/bin on Remote host
+  ansible.builtin.copy:
+    src: /home/ansible/agent/linux_agent_install.sh
+    dest: /usr/bin
+    owner: ansible
+    group: absible
+    mode: '0755'
+
+- name: Run apt-get update as a separate step
+  apt:
+    update_cache: yes
+
+- name: Install agent as systemd daemon
+  delegate_to: localhost
+#  shell: "linux_agent_install.sh -a {{ sysdig_access_key }} --collector {{ sysdig_collector }} --collector_port {{ sysdig_collector_port }} --check_certificate false"
+   shell: "curl -so https://download.sysdig.com/stable/install-agent | sudo bash -s -- --access_key {{ sysdig_access_key }} --collector {{ sysdig_collector }} --secure true --check_certificate false"
+  changed_when: false
+  tags: always
