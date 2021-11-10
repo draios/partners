@@ -51,11 +51,15 @@ Then install pip using:
 
 `$ apt-get install software-properties-common`
 
+`$ update-alternatives --config python3` (switch back to Python 3.6)
+
 `$ apt-add-repository --yes --update ppa:ansible/ansible`
 
 `$ apt-get update`
 
 `$ apt-get install ansible`
+
+`$ update-alternatives --config python3` (switch back to Python 3.8)
 
 `$ ansible-galaxy collection install community.kubernetes`
 
@@ -71,15 +75,7 @@ Make sure your ansible user has the proper kubeconfig file to access your kubern
 Make sure all of the variables are filled in properly for your Sysdig backend connection in `group_vars/agent_vars.yaml` .
 
  _Use Ansible vault to store your SysDig Agent access key._
-You can edit the exisitng vaultfile.yaml using:
-
-`ansible~$: ansible-vault edit agent/vaultfile.yaml`
-
-The command will ask you for a password (use Passw0rd).
-
-or....
-
-you can create a new vaultfile.yaml with the:
+You can create a new vaultfile.yaml with the:
 
 `ansible~$: ansible-vault create agent/vaultfile.yaml`
 
