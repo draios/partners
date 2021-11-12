@@ -5,8 +5,17 @@
 - systemd daemon on Linux
 
 ## Pre-reqs
+## Requirements
+- ssh
+- ansible user
+- Ansible 2.6+
+- python3
+- pip3
+- SysDig account access key
+- Ansible Vault to store SysDig access key
 
 Ubuntu 16.04 and 18.04
+As root user or with sudo:
 Run:
 `$ apt update -y` - Run `apt upgrade` - Reboot
 
@@ -59,9 +68,22 @@ Then install pip using:
 
 `$ apt-get install ansible`
 
-`$ update-alternatives --config python3` (switch back to Python 3.8)
-
 `$ ansible-galaxy collection install community.kubernetes`
+
+`$ ansible-galaxy collection install community.crypto`
+
+`S useradd ansible -m -s /bin/bash`
+
+`s passwd ansible` (Choose a password for the ansible user)
+
+`s cd /home/ansible`
+
+`s untar the ansible-agent.tar.gz file downloaded from https://github.com/draios/professional-services/tree/master/tools/ansible-agent into the /home/ansible directory.` 
+
+`s chown -R ansible:ansible /home/ansible/agent`
+
+`$ su - ansible`
+
 
 ## Commands to execute playbook:
 NOTE: For TAGS systemd-install and docker-install, make sure there is proper access for the ansible user to connect to the hosts in the hosts.ini file using a private/public key pair, and the ansible user has sudo with NO password on each host.
@@ -70,14 +92,16 @@ NOTE: For TAGS systemd-install and docker-install, make sure there is proper acc
   ansible ALL=(ALL) NOPASSWD: ALL
 - Put the PRIVATE IP's of the hosts into the `hosts.ini` file.  Examples are provided in the exisiting hosts.ini file.
 
-Make sure your ansible user has the proper kubeconfig file to access your kubernetes cluster with kubectl admin access.
+For k8s cluster agent install, make sure your ansible user has the proper kubeconfig file to access your kubernetes cluster with kubectl admin access.
 
-Make sure all of the variables are filled in properly for your Sysdig backend connection in `group_vars/agent_vars.yaml` .
+Make sure all of the variables are filled in properly for your Sysdig backend connection in `~/agent/group_vars/agent_vars.yaml` .
 
  _Use Ansible vault to store your SysDig Agent access key._
 You can create a new vaultfile.yaml with the:
 
-`ansible~$: ansible-vault create agent/vaultfile.yaml`
+`ansible~$: rm ~/agent/vaultfile.yaml`
+
+`ansible~$: ansible-vault create ~/agent/vaultfile.yaml`
 
 This command will ask you to create a new password.
 
@@ -91,12 +115,6 @@ Add the following line, but use your Sysdig Agent Key.
 
 `ansible~$:  ansible-playbook sysdig_agent_install.yml --vault-id @prompt -e @vaultfile.yaml -e @group_vars/agent_vars.yaml --tag k8s-install`
 
-
-## Requirements
-- ssh
-- Ansible 2.6+
-- SysDig account access key
-- Ansible Vault to store SysDig access key
 
 ### See (group_vars/agent_vars.yaml).
 
